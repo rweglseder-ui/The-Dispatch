@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dispatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --paper: #f5f0e8;
+    --paper-dark: #ede8dc;
+    --rule: #c8bfa8;
+    --accent: #b5341a;
+    --accent-light: #e8d5d0;
+    --muted: #6b6257;
+    --highlight: #f0e68c;
+    --sidebar-w: 360px;
+    --summary-h: 280px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── MASTHEAD ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    flex-shrink: 0;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .masthead-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--paper);
+  }
+
+  .masthead-title span {
+    color: var(--accent);
+  }
+
+  .masthead-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--rule);
+    text-align: right;
+    line-height: 1.4;
+  }
+
+  .masthead-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 5px 12px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--paper);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); }
+  .btn.primary:hover { background: #c94020; }
+
+  /* ── TICKER ── */
+  .ticker-bar {
+    background: var(--accent);
+    color: white;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    padding: 3px 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .ticker-label {
+    background: var(--ink);
+    padding: 0 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ticker-scroll {
+    overflow: hidden;
+    flex: 1;
+  }
+  .ticker-inner {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 40s linear infinite;
+    padding-left: 100%;
+  }
+  .ticker-inner.paused { animation-play-state: paused; }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR (feeds) ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    border-right: 2px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    background: var(--paper-dark);
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .feed-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--rule);
+    flex-shrink: 0;
+  }
+
+  .feed-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .feed-tab:hover { border-color: var(--ink); color: var(--ink); }
+  .feed-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .feed-tab.manage { border-style: dashed; color: var(--accent); border-color: var(--accent); }
+  .feed-tab.manage:hover { background: var(--accent-light); }
+
+  .article-list {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .article-item {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .article-item:hover { background: rgba(0,0,0,0.04); }
+  .article-item.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .article-item.active .article-source,
+  .article-item.active .article-date,
+  .article-item.active .article-preview {
+    color: var(--rule);
+  }
+  .article-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .article-source {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .article-item.active .article-source { color: #f0a090; }
+
+  .article-title {
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .article-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .article-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+  }
+
+  .article-preview {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-top: 3px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── ARTICLE VIEW ── */
+  .article-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 36px 20px;
+  }
+
+  .article-view-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .article-view-empty .big-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+
+  .article-view-empty p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  .article-kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .article-headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 14px;
+  }
+
+  .article-byline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-bottom: 18px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .article-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .btn-sm {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn-sm.bookmarked { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .article-body {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--ink);
+    max-width: 680px;
+  }
+
+  .article-body p { margin-bottom: 1rem; }
+
+  /* ── SUMMARY PANEL ── */
+  .summary-panel {
+    height: var(--summary-h);
+    flex-shrink: 0;
+    border-top: 3px double var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+  }
+
+  .summary-header h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ai-badge {
+    background: var(--accent);
+    color: white;
+    font-size: 0.55rem;
+    padding: 1px 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .summary-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 20px;
+  }
+
+  .summary-placeholder {
+    color: #555;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-style: italic;
+    padding: 20px 0;
+  }
+
+  .summary-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 20px 0;
+  }
+
+  .loading-dots span {
+    animation: blink 1.2s infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  .summary-bullets {
+    list-style: none;
+    padding: 0;
+  }
+
+  .summary-bullets li {
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #ddd;
+    padding: 5px 0 5px 20px;
+    border-bottom: 1px solid #2a2a2a;
+    position: relative;
+  }
+
+  .summary-bullets li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 0.7rem;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn-ghost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 10px;
+    border: 1px solid #444;
+    background: transparent;
+    color: var(--rule);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--rule); color: var(--paper); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    height: 24px;
+    background: var(--paper-dark);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .status-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .status-dot.green { background: #4a9; }
+  .status-dot.yellow { background: #c90; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    width: 520px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+
+  .modal-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .modal-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--paper);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.7;
+  }
+  .modal-close:hover { opacity: 1; }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--rule);
+    background: white;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink);
+    outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus {
+    border-color: var(--ink);
+  }
+
+  .form-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-modal {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    padding: 7px 16px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-modal:hover { background: var(--paper-dark); }
+  .btn-modal.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn-modal.primary:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-modal.danger { color: var(--accent); border-color: var(--accent); }
+  .btn-modal.danger:hover { background: var(--accent); color: white; }
+
+  /* Feed manager */
+  .feed-list-manage {
+    list-style: none;
+  }
+  .feed-list-manage li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+    gap: 10px;
+  }
+  .feed-list-manage .feed-name {
+    font-weight: 600;
+    font-size: 0.82rem;
+  }
+  .feed-list-manage .feed-url {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+  .btn-remove {
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--accent);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+  }
+  .btn-remove:hover { background: var(--accent); color: white; }
+
+  /* Blocklist */
+  .blocklist-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .block-tag {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .block-tag button {
+    background: none;
+    border: none;
+    color: var(--rule);
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+    padding: 0;
+  }
+  .block-tag button:hover { color: var(--accent); }
+
+  /* Bookmarks */
+  .bookmark-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .bookmark-item .bk-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+    cursor: pointer;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .bookmark-item .bk-title:hover { color: var(--accent); }
+  .bookmark-item .bk-source {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  /* OPML textarea */
+  .opml-area {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    height: 180px;
+    resize: vertical;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .divider { width: 1px; height: 12px; background: #444; }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header>
+  <div class="masthead-title">The <span>Dispatch</span></div>
+  <div class="masthead-meta" id="masthead-date"></div>
+  <div class="masthead-actions">
+    <button class="btn" onclick="openModal('refresh-modal')" id="refresh-btn">⟳ Refresh</button>
+    <button class="btn" onclick="openModal('bookmarks-modal')">⚑ Saved</button>
+    <button class="btn" onclick="openModal('settings-modal')">⚙ Settings</button>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-label">LATEST</div>
+  <div class="ticker-scroll">
+    <div class="ticker-inner" id="ticker-inner">Loading headlines...</div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Feeds</h2>
+      <span class="status-item" id="article-count-label">—</span>
+    </div>
+    <div class="feed-tabs" id="feed-tabs">
+      <button class="feed-tab active" data-feed="all" onclick="filterFeed('all', this)">All</button>
+    </div>
+    <div class="article-list" id="article-list">
+      <div style="padding:24px 14px; text-align:center; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.7rem;">
+        Click <strong>Refresh</strong> to load feeds
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- ARTICLE VIEW -->
+    <div class="article-view" id="article-view">
+      <div class="article-view-empty" id="empty-state">
+        <div class="big-icon">📰</div>
+        <p>Select an article to read</p>
+      </div>
+    </div>
+
+    <!-- AI SUMMARY PANEL -->
+    <div class="summary-panel">
+      <div class="summary-header">
+        <h3>
+          AI Summary <span class="ai-badge">CLAUDE</span>
+        </h3>
+        <div class="summary-actions">
+          <button class="btn-ghost" id="summarize-btn" onclick="summarizeArticle()" style="display:none">▶ Summarize</button>
+          <button class="btn-ghost" id="regen-btn" onclick="summarizeArticle(true)" style="display:none">↺ Regenerate</button>
+        </div>
+      </div>
+      <div class="summary-body" id="summary-body">
+        <div class="summary-placeholder">Select an article, then click Summarize to get an AI-powered bullet-point summary.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span class="status-item"><span class="status-dot" id="status-dot"></span><span id="status-text">Ready</span></span>
+  <span class="status-item" id="last-refresh-label">Not refreshed yet</span>
+  <span class="status-item" id="unread-count-label"></span>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- MODALS -->
+<!-- ══════════════════════════════════════ -->
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Anthropic API Key</label>
+        <input type="password" id="api-key-input" placeholder="sk-ant-...">
+        <div class="form-hint">Stored locally in your browser only. Never sent to any server except Anthropic.</div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--rule);margin:16px 0">
+      <h3 style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px">Manage Feeds</h3>
+      <ul class="feed-list-manage" id="feed-list-manage"></ul>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-modal" onclick="openModal('add-feed-modal')">+ Add Feed</button>
+        <button class="btn-modal" onclick="exportOPML()">Export OPML</button>
+        <button class="btn-modal" onclick="openModal('import-modal')">Import OPML</button>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--rule);margin:16px 0">
+      <h3 style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px">Keyword Blocklist</h3>
+      <div class="form-hint" style="margin-bottom:10px">Articles containing these words in their title will be hidden.</div>
+      <div class="blocklist-tags" id="blocklist-tags"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="block-word-input" placeholder="Add keyword..." style="flex:1;padding:6px 10px;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;" onkeydown="if(event.key==='Enter')addBlockWord()">
+        <button class="btn-modal" onclick="addBlockWord()">Add</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeModal('settings-modal')">Cancel</button>
+      <button class="btn-modal primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Feed Modal -->
+<div class="modal-overlay" id="add-feed-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Feed</h2>
+      <button class="modal-close" onclick="closeModal('add-feed-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Feed Name</label>
+        <input type="text" id="new-feed-name" placeholder="e.g. NPR News">
+      </div>
+      <div class="form-group">
+        <label>RSS / Atom Feed URL</label>
+        <input type="url" id="new-feed-url" placeholder="https://...">
+        <div class="form-hint">Paste the direct RSS feed URL.</div>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="new-feed-category">
+          <option value="Federal">Federal / Gov</option>
+          <option value="News">News</option>
+          <option value="Tech">Tech</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeModal('add-feed-modal')">Cancel</button>
+      <button class="btn-modal primary" onclick="addFeed()">Add Feed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import OPML Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Import OPML</h2>
+      <button class="modal-close" onclick="closeModal('import-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Paste OPML Content</label>
+        <textarea class="opml-area" id="opml-input" placeholder="Paste your OPML XML here..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeModal('import-modal')">Cancel</button>
+      <button class="btn-modal primary" onclick="importOPML()">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bookmarks Modal -->
+<div class="modal-overlay" id="bookmarks-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Saved Articles</h2>
+      <button class="modal-close" onclick="closeModal('bookmarks-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="bookmarks-body">
+      <div style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.7rem">No saved articles yet.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal danger" onclick="clearBookmarks()">Clear All</button>
+      <button class="btn-modal" onclick="closeModal('bookmarks-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refresh Modal -->
+<div class="modal-overlay" id="refresh-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Refreshing Feeds</h2>
+      <button class="modal-close" onclick="closeModal('refresh-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="refresh-log" style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;line-height:2">
+      Starting...
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeModal('refresh-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let state = {
+  feeds: [],
+  articles: [],
+  blocklist: [],
+  bookmarks: [],
+  currentArticle: null,
+  currentSummary: null,
+  currentFilter: 'all',
+  apiKey: '',
+};
+
+const DEFAULT_FEEDS = [
+  { id: 'fedsmith',   name: 'FedSmith',              url: 'https://www.fedsmith.com/feed/',                          category: 'Federal' },
+  { id: 'fedn',       name: 'Federal News Network',  url: 'https://federalnewsnetwork.com/feed/',                    category: 'Federal' },
+  { id: 'govexec',    name: 'GovExec',               url: 'https://www.govexec.com/rss/all/',                        category: 'Federal' },
+  { id: 'axios',      name: 'Axios',                 url: 'https://api.axios.com/feed/',                             category: 'News' },
+  { id: 'npr',        name: 'NPR News',              url: 'https://feeds.npr.org/1001/rss.xml',                      category: 'News' },
+  { id: 'ap',         name: 'AP News',               url: 'https://feeds.apnews.com/rss/apf-topnews',                category: 'News' },
+  { id: 'bbc',        name: 'BBC News',              url: 'http://feeds.bbci.co.uk/news/rss.xml',                    category: 'News' },
+  { id: 'ars',        name: 'Ars Technica',          url: 'https://feeds.arstechnica.com/arstechnica/index',         category: 'Tech' },
+  { id: 'verge',      name: 'The Verge',             url: 'https://www.theverge.com/rss/index.xml',                  category: 'Tech' },
+];
+
+// CORS proxy
+const PROXY = 'https://api.allorigins.win/raw?url=';
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+function init() {
+  loadFromStorage();
+  renderMasthead();
+  renderFeedTabs();
+  renderFeedManager();
+  renderBlocklist();
+  renderBookmarks();
+  updateStatus('Ready', false);
+  setInterval(renderMasthead, 60000);
+}
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('dispatch_state');
+  if (saved) {
+    const s = JSON.parse(saved);
+    state.feeds = s.feeds || DEFAULT_FEEDS;
+    state.articles = s.articles || [];
+    state.blocklist = s.blocklist || [];
+    state.bookmarks = s.bookmarks || [];
+    state.apiKey = s.apiKey || '';
+  } else {
+    state.feeds = [...DEFAULT_FEEDS];
+  }
+  if (document.getElementById('api-key-input')) {
+    document.getElementById('api-key-input').value = state.apiKey;
+  }
+  if (state.articles.length) renderArticleList();
+}
+
+function saveToStorage() {
+  localStorage.setItem('dispatch_state', JSON.stringify({
+    feeds: state.feeds,
+    articles: state.articles,
+    blocklist: state.blocklist,
+    bookmarks: state.bookmarks,
+    apiKey: state.apiKey,
+  }));
+}
+
+// ══════════════════════════════════════
+// MASTHEAD / DATE
+// ══════════════════════════════════════
+function renderMasthead() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('masthead-date').textContent =
+    `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+}
+
+// ══════════════════════════════════════
+// RSS FETCH
+// ══════════════════════════════════════
+async function refreshFeeds() {
+  const log = document.getElementById('refresh-log');
+  log.innerHTML = '';
+
+  const addLog = (msg, ok=true) => {
+    const line = document.createElement('div');
+    line.style.color = ok ? 'inherit' : '#c94020';
+    line.textContent = (ok ? '✓ ' : '✗ ') + msg;
+    log.appendChild(line);
+  };
+
+  updateStatus('Fetching feeds…', true);
+  let newArticles = [];
+
+  for (const feed of state.feeds) {
+    try {
+      addLog(`Fetching ${feed.name}…`);
+      const url = PROXY + encodeURIComponent(feed.url);
+      const res = await fetch(url);
+      const text = await res.text();
+      const items = parseRSS(text, feed);
+      newArticles.push(...items);
+      addLog(`${feed.name}: ${items.length} articles`);
+    } catch(e) {
+      addLog(`${feed.name}: Failed (${e.message})`, false);
+    }
+  }
+
+  // Dedupe by URL, filter blocklist, sort by date
+  const seen = new Set(state.articles.map(a => a.url));
+  const filtered = newArticles.filter(a => {
+    if (seen.has(a.url)) return false;
+    if (isBlocked(a.title)) return false;
+    return true;
+  });
+
+  // Merge and keep last 500
+  state.articles = [...filtered, ...state.articles]
+    .sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate))
+    .slice(0, 500);
+
+  saveToStorage();
+  renderArticleList();
+  renderTicker();
+  updateStatus(`Refreshed — ${state.articles.length} articles`, false);
+  const now = new Date();
+  document.getElementById('last-refresh-label').textContent =
+    `Last refresh: ${now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  addLog(`Done! ${filtered.length} new articles added.`);
+}
+
+function parseRSS(xml, feed) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  const isAtom = doc.querySelector('feed') !== null;
+
+  if (isAtom) {
+    return [...doc.querySelectorAll('entry')].slice(0, 20).map(e => ({
+      id: feed.id + '_' + (e.querySelector('id')?.textContent || Math.random()),
+      feedId: feed.id,
+      feedName: feed.name,
+      category: feed.category,
+      title: e.querySelector('title')?.textContent?.trim() || 'Untitled',
+      url: e.querySelector('link')?.getAttribute('href') || '',
+      content: e.querySelector('content,summary')?.textContent?.trim() || '',
+      pubDate: e.querySelector('updated,published')?.textContent || new Date().toISOString(),
+      unread: true,
+      summary: null,
+    }));
+  } else {
+    return [...doc.querySelectorAll('item')].slice(0, 20).map(e => {
+      const content = e.querySelector('content\\:encoded,description')?.textContent || '';
+      const stripped = stripHTML(content).slice(0, 600);
+      return {
+        id: feed.id + '_' + (e.querySelector('guid')?.textContent || Math.random()),
+        feedId: feed.id,
+        feedName: feed.name,
+        category: feed.category,
+        title: e.querySelector('title')?.textContent?.trim() || 'Untitled',
+        url: e.querySelector('link')?.textContent?.trim() || '',
+        content: stripped,
+        pubDate: e.querySelector('pubDate')?.textContent || new Date().toISOString(),
+        unread: true,
+        summary: null,
+      };
+    });
+  }
+}
+
+function stripHTML(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function isBlocked(title) {
+  if (!title || !state.blocklist.length) return false;
+  const lower = title.toLowerCase();
+  return state.blocklist.some(w => {
+    const re = new RegExp(`\\b${w.toLowerCase()}\\b`);
+    return re.test(lower);
+  });
+}
+
+// ══════════════════════════════════════
+// RENDER ARTICLE LIST
+// ══════════════════════════════════════
+function renderFeedTabs() {
+  const tabs = document.getElementById('feed-tabs');
+  // Keep "All" tab
+  const existing = [...tabs.querySelectorAll('[data-feed]')].map(t => t.dataset.feed);
+
+  // Categories
+  const cats = ['all', ...new Set(state.feeds.map(f => f.category))];
+  cats.forEach(cat => {
+    if (existing.includes(cat)) return;
+    const btn = document.createElement('button');
+    btn.className = 'feed-tab' + (cat === 'all' ? ' active' : '');
+    btn.dataset.feed = cat;
+    btn.textContent = cat === 'all' ? 'All' : cat;
+    btn.onclick = () => filterFeed(cat, btn);
+    tabs.appendChild(btn);
+  });
+
+  // Manage button
+  if (!tabs.querySelector('.manage')) {
+    const mgr = document.createElement('button');
+    mgr.className = 'feed-tab manage';
+    mgr.textContent = '+ Manage';
+    mgr.onclick = () => openModal('settings-modal');
+    tabs.appendChild(mgr);
+  }
+}
+
+function filterFeed(cat, btn) {
+  state.currentFilter = cat;
+  document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderArticleList();
+}
+
+function renderArticleList() {
+  const list = document.getElementById('article-list');
+  let articles = state.articles;
+
+  if (state.currentFilter !== 'all') {
+    articles = articles.filter(a => a.category === state.currentFilter);
+  }
+
+  const unread = articles.filter(a => a.unread).length;
+  document.getElementById('article-count-label').textContent = `${articles.length} articles`;
+  document.getElementById('unread-count-label').textContent = `${unread} unread`;
+
+  if (!articles.length) {
+    list.innerHTML = '<div style="padding:24px 14px;text-align:center;color:var(--muted);font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem">No articles. Click Refresh to load.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  articles.forEach(article => {
+    const div = document.createElement('div');
+    div.className = 'article-item' + (article.unread ? ' unread' : '') + (state.currentArticle?.id === article.id ? ' active' : '');
+    div.dataset.id = article.id;
+
+    const age = timeAgo(article.pubDate);
+    div.innerHTML = `
+      <div class="article-source">${escHtml(article.feedName)}</div>
+      <div class="article-title">${escHtml(article.title)}</div>
+      <div class="article-meta">
+        <span class="article-date">${age}</span>
+      </div>
+      ${article.content ? `<div class="article-preview">${escHtml(article.content.slice(0,120))}</div>` : ''}
+    `;
+    div.onclick = () => selectArticle(article);
+    list.appendChild(div);
+  });
+}
+
+function selectArticle(article) {
+  // Mark read
+  article.unread = false;
+  state.currentArticle = article;
+  state.currentSummary = article.summary || null;
+  saveToStorage();
+
+  // Update list highlights
+  document.querySelectorAll('.article-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === article.id);
+    if (el.dataset.id === article.id) el.classList.remove('unread');
+  });
+
+  renderArticleView(article);
+  renderSummaryPanel();
+}
+
+function renderArticleView(article) {
+  const view = document.getElementById('article-view');
+  const isBookmarked = state.bookmarks.some(b => b.id === article.id);
+  const day = new Date(article.pubDate).toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  view.innerHTML = `
+    <div class="article-kicker">${escHtml(article.feedName)} · ${escHtml(article.category)}</div>
+    <h1 class="article-headline">${escHtml(article.title)}</h1>
+    <div class="article-byline">
+      <span>${day}</span>
+    </div>
+    <div class="article-actions">
+      <a href="${escHtml(article.url)}" target="_blank" rel="noopener" class="btn-sm">↗ Open Article</a>
+      <button class="btn-sm ${isBookmarked ? 'bookmarked' : ''}" id="bookmark-btn" onclick="toggleBookmark()">
+        ${isBookmarked ? '⚑ Saved' : '⚐ Save'}
+      </button>
+    </div>
+    <div class="article-body">
+      ${article.content ? `<p>${escHtml(article.content)}</p>` : '<p style="color:var(--muted);font-style:italic">Click "Open Article" to read the full piece.</p>'}
+    </div>
+  `;
+}
+
+function renderSummaryPanel() {
+  const body = document.getElementById('summary-body');
+  const sumBtn = document.getElementById('summarize-btn');
+  const regenBtn = document.getElementById('regen-btn');
+
+  if (!state.currentArticle) {
+    body.innerHTML = '<div class="summary-placeholder">Select an article, then click Summarize.</div>';
+    sumBtn.style.display = 'none';
+    regenBtn.style.display = 'none';
+    return;
+  }
+
+  if (state.currentSummary) {
+    renderBullets(state.currentSummary);
+    sumBtn.style.display = 'none';
+    regenBtn.style.display = 'inline-block';
+  } else {
+    body.innerHTML = '<div class="summary-placeholder">Click Summarize to get an AI-powered breakdown of this article.</div>';
+    sumBtn.style.display = 'inline-block';
+    regenBtn.style.display = 'none';
+  }
+}
+
+function renderBullets(text) {
+  const body = document.getElementById('summary-body');
+  const lines = text.split('\n').map(l => l.replace(/^[-•*▸]\s*/, '').trim()).filter(Boolean);
+  body.innerHTML = `<ul class="summary-bullets">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ul>`;
+}
+
+// ══════════════════════════════════════
+// AI SUMMARY
+// ══════════════════════════════════════
+async function summarizeArticle(regen = false) {
+  if (!state.currentArticle) return;
+
+  const key = state.apiKey;
+  if (!key) {
+    alert('Please add your Anthropic API key in Settings first.');
+    openModal('settings-modal');
+    return;
+  }
+
+  const body = document.getElementById('summary-body');
+  const sumBtn = document.getElementById('summarize-btn');
+  const regenBtn = document.getElementById('regen-btn');
+
+  sumBtn.style.display = 'none';
+  regenBtn.style.display = 'none';
+  body.innerHTML = `<div class="summary-loading">
+    <span>Summarizing</span>
+    <span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+  </div>`;
+
+  const article = state.currentArticle;
+  const prompt = `You are a concise news summarizer. Summarize the following article in exactly 4-6 bullet points. Each bullet point should be one clear, informative sentence. Start each bullet with a dash (-). Focus on the key facts, decisions, and implications.
+
+Article title: ${article.title}
+Source: ${article.feedName}
+
+Article content:
+${article.content || 'No content available — summarize based on the title only.'}
+
+Provide only the bullet points, no intro or outro.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      body.innerHTML = `<div class="summary-placeholder" style="color:#f08080">Error: ${escHtml(data.error.message)}</div>`;
+      sumBtn.style.display = 'inline-block';
+      return;
+    }
+
+    const text = data.content?.[0]?.text || '';
+    state.currentSummary = text;
+    article.summary = text;
+    saveToStorage();
+    renderBullets(text);
+    regenBtn.style.display = 'inline-block';
+
+  } catch(e) {
+    body.innerHTML = `<div class="summary-placeholder" style="color:#f08080">Failed to fetch summary: ${escHtml(e.message)}</div>`;
+    sumBtn.style.display = 'inline-block';
+  }
+}
+
+// ══════════════════════════════════════
+// BOOKMARKS
+// ══════════════════════════════════════
+function toggleBookmark() {
+  if (!state.currentArticle) return;
+  const a = state.currentArticle;
+  const idx = state.bookmarks.findIndex(b => b.id === a.id);
+  if (idx >= 0) {
+    state.bookmarks.splice(idx, 1);
+  } else {
+    state.bookmarks.unshift({ id: a.id, title: a.title, url: a.url, feedName: a.feedName, savedAt: new Date().toISOString() });
+  }
+  saveToStorage();
+  renderBookmarks();
+  renderArticleView(a); // refresh button state
+}
+
+function renderBookmarks() {
+  const body = document.getElementById('bookmarks-body');
+  if (!body) return;
+  if (!state.bookmarks.length) {
+    body.innerHTML = '<div style="color:var(--muted);font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem">No saved articles yet.</div>';
+    return;
+  }
+  body.innerHTML = state.bookmarks.map(b => `
+    <div class="bookmark-item">
+      <a class="bk-title" href="${escHtml(b.url)}" target="_blank" rel="noopener">${escHtml(b.title)}</a>
+      <div class="bk-source">${escHtml(b.feedName)} · ${timeAgo(b.savedAt)}</div>
+    </div>
+  `).join('');
+}
+
+function clearBookmarks() {
+  if (!confirm('Clear all saved articles?')) return;
+  state.bookmarks = [];
+  saveToStorage();
+  renderBookmarks();
+}
+
+// ══════════════════════════════════════
+// BLOCKLIST
+// ══════════════════════════════════════
+function addBlockWord() {
+  const input = document.getElementById('block-word-input');
+  const word = input.value.trim().toLowerCase();
+  if (!word || state.blocklist.includes(word)) return;
+  state.blocklist.push(word);
+  input.value = '';
+  renderBlocklist();
+}
+
+function removeBlockWord(word) {
+  state.blocklist = state.blocklist.filter(w => w !== word);
+  renderBlocklist();
+}
+
+function renderBlocklist() {
+  const container = document.getElementById('blocklist-tags');
+  if (!container) return;
+  container.innerHTML = state.blocklist.map(w => `
+    <div class="block-tag">
+      ${escHtml(w)}
+      <button onclick="removeBlockWord('${escHtml(w)}')" title="Remove">✕</button>
+    </div>
+  `).join('') || '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.65rem;color:var(--muted)">No blocked keywords yet.</span>';
+}
+
+// ══════════════════════════════════════
+// FEED MANAGER
+// ══════════════════════════════════════
+function renderFeedManager() {
+  const list = document.getElementById('feed-list-manage');
+  if (!list) return;
+  list.innerHTML = state.feeds.map(f => `
+    <li>
+      <div>
+        <div class="feed-name">${escHtml(f.name)}</div>
+        <div class="feed-url">${escHtml(f.url)}</div>
+      </div>
+      <button class="btn-remove" onclick="removeFeed('${f.id}')">Remove</button>
+    </li>
+  `).join('');
+}
+
+function removeFeed(id) {
+  if (!confirm('Remove this feed?')) return;
+  state.feeds = state.feeds.filter(f => f.id !== id);
+  saveToStorage();
+  renderFeedManager();
+  renderFeedTabs();
+}
+
+function addFeed() {
+  const name = document.getElementById('new-feed-name').value.trim();
+  const url = document.getElementById('new-feed-url').value.trim();
+  const cat = document.getElementById('new-feed-category').value;
+  if (!name || !url) { alert('Please fill in name and URL.'); return; }
+  const id = 'custom_' + Date.now();
+  state.feeds.push({ id, name, url, category: cat });
+  saveToStorage();
+  renderFeedManager();
+  renderFeedTabs();
+  closeModal('add-feed-modal');
+  document.getElementById('new-feed-name').value = '';
+  document.getElementById('new-feed-url').value = '';
+}
+
+// ══════════════════════════════════════
+// OPML
+// ══════════════════════════════════════
+function exportOPML() {
+  const feeds = state.feeds.map(f =>
+    `  <outline type="rss" text="${escHtml(f.name)}" xmlUrl="${escHtml(f.url)}" category="${escHtml(f.category)}"/>`
+  ).join('\n');
+  const opml = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <head><title>The Dispatch Feeds</title></head>\n  <body>\n${feeds}\n  </body>\n</opml>`;
+  const blob = new Blob([opml], { type: 'text/xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dispatch-feeds.opml';
+  a.click();
+}
+
+function importOPML() {
+  const text = document.getElementById('opml-input').value.trim();
+  if (!text) return;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/xml');
+    const outlines = [...doc.querySelectorAll('outline[xmlUrl]')];
+    let added = 0;
+    outlines.forEach(o => {
+      const url = o.getAttribute('xmlUrl');
+      const name = o.getAttribute('text') || o.getAttribute('title') || url;
+      const cat = o.getAttribute('category') || 'Other';
+      if (state.feeds.some(f => f.url === url)) return;
+      state.feeds.push({ id: 'opml_' + Date.now() + Math.random(), name, url, category: cat });
+      added++;
+    });
+    saveToStorage();
+    renderFeedManager();
+    renderFeedTabs();
+    closeModal('import-modal');
+    alert(`Imported ${added} new feeds.`);
+  } catch(e) {
+    alert('Invalid OPML: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════
+// TICKER
+// ══════════════════════════════════════
+function renderTicker() {
+  const ticker = document.getElementById('ticker-inner');
+  if (!state.articles.length) return;
+  const headlines = state.articles.slice(0, 20).map(a => `${a.feedName.toUpperCase()}: ${a.title}`).join('   ·   ');
+  ticker.textContent = headlines;
+}
+
+// ══════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════
+function saveSettings() {
+  state.apiKey = document.getElementById('api-key-input').value.trim();
+  saveToStorage();
+  closeModal('settings-modal');
+  updateStatus('Settings saved', false);
+}
+
+// ══════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'settings-modal') {
+    document.getElementById('api-key-input').value = state.apiKey;
+    renderFeedManager();
+    renderBlocklist();
+  }
+  if (id === 'bookmarks-modal') renderBookmarks();
+  if (id === 'refresh-modal') {
+    document.getElementById('refresh-log').innerHTML = 'Starting...';
+    refreshFeeds();
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ══════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════
+function updateStatus(msg, loading) {
+  document.getElementById('status-text').textContent = msg;
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot ' + (loading ? 'yellow' : 'green');
+}
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const diff = (Date.now() - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════
+// START
+// ══════════════════════════════════════
+init();
+</script>
+</body>
+</html>
