@@ -7,16 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #1a1a1a;
-    --paper: #f5f0e8;
-    --paper-dark: #ede8dc;
-    --rule: #c8bfa8;
-    --accent: #b5341a;
-    --accent-light: #e8d5d0;
-    --muted: #6b6257;
-    --highlight: #f0e68c;
-    --sidebar-w: 360px;
-    --summary-h: 280px;
+    --ink: #1e2530;          /* deep blue-slate for text */
+    --paper: #f0f2f5;        /* cool light gray background */
+    --paper-dark: #e4e8ed;   /* slightly darker for sidebar */
+    --rule: #b8c4d0;         /* cool gray-blue dividers */
+    --accent: #3a6ea8;       /* steel blue accent */
+    --accent-light: #d6e4f0; /* soft blue tint */
+    --muted: #6b7d8f;        /* muted blue-gray */
+    --highlight: #cce4f7;    /* soft blue highlight */
+    --sidebar-w: 320px;
+    --summary-h: 240px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,10 +38,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 14px;
     height: 52px;
     flex-shrink: 0;
     border-bottom: 3px solid var(--accent);
+    gap: 8px;
+    overflow: hidden;
   }
 
   .masthead-title {
@@ -50,6 +52,8 @@
     font-weight: 900;
     letter-spacing: 0.04em;
     color: var(--paper);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .masthead-title span {
@@ -62,34 +66,46 @@
     color: var(--rule);
     text-align: right;
     line-height: 1.4;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .masthead-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .btn {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.7rem;
-    padding: 5px 12px;
+    padding: 5px 10px;
     border: 1px solid var(--rule);
     background: transparent;
     color: var(--paper);
     cursor: pointer;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     transition: all 0.15s;
+    white-space: nowrap;
   }
   .btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* On small screens: hide date, shrink buttons to icons only */
+  @media (max-width: 600px) {
+    .masthead-meta { display: none; }
+    .masthead-title { font-size: 1.3rem; }
+    .btn .btn-label { display: none; }
+    .btn { padding: 6px 9px; font-size: 1rem; letter-spacing: 0; }
+  }
   .btn.primary { background: var(--accent); border-color: var(--accent); }
-  .btn.primary:hover { background: #c94020; }
+  .btn.primary:hover { background: #2d5a8e; }
 
   /* ── TICKER ── */
   .ticker-bar {
-    background: var(--accent);
-    color: white;
+    background: #2c3e52;
+    color: #c8dcea;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.65rem;
     padding: 3px 0;
@@ -100,7 +116,7 @@
     gap: 0;
   }
   .ticker-label {
-    background: var(--ink);
+    background: var(--accent);
     padding: 0 12px;
     height: 100%;
     display: flex;
@@ -108,6 +124,7 @@
     font-weight: 500;
     letter-spacing: 0.1em;
     white-space: nowrap;
+    color: white;
     flex-shrink: 0;
   }
   .ticker-scroll {
@@ -131,16 +148,28 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 0;
   }
 
   /* ── SIDEBAR (feeds) ── */
   .sidebar {
     width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    max-width: var(--sidebar-w);
     flex-shrink: 0;
     border-right: 2px solid var(--ink);
     display: flex;
     flex-direction: column;
     background: var(--paper-dark);
+    overflow: hidden;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 
@@ -262,17 +291,11 @@
     overflow: hidden;
   }
 
-  /* ── MAIN CONTENT ── */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
 
   /* ── ARTICLE VIEW ── */
   .article-view {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 28px 36px 20px;
   }
@@ -362,8 +385,8 @@
   .summary-panel {
     height: var(--summary-h);
     flex-shrink: 0;
-    border-top: 3px double var(--ink);
-    background: var(--ink);
+    border-top: 3px solid var(--accent);
+    background: #2c3e52;
     color: var(--paper);
     display: flex;
     flex-direction: column;
@@ -375,7 +398,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #3d5268;
     flex-shrink: 0;
   }
 
@@ -384,7 +407,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--rule);
+    color: #8fafc8;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -405,7 +428,7 @@
   }
 
   .summary-placeholder {
-    color: #555;
+    color: #7a9ab5;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
     font-style: italic;
@@ -416,7 +439,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--rule);
+    color: #8fafc8;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
     padding: 20px 0;
@@ -438,9 +461,9 @@
     font-family: 'Source Serif 4', serif;
     font-size: 0.82rem;
     line-height: 1.5;
-    color: #ddd;
+    color: #d4e4f0;
     padding: 5px 0 5px 20px;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid #3d5268;
     position: relative;
   }
 
@@ -462,15 +485,15 @@
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.6rem;
     padding: 3px 10px;
-    border: 1px solid #444;
+    border: 1px solid #4d6d88;
     background: transparent;
-    color: var(--rule);
+    color: #8fafc8;
     cursor: pointer;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     transition: all 0.15s;
   }
-  .btn-ghost:hover { border-color: var(--rule); color: var(--paper); }
+  .btn-ghost:hover { border-color: #8fafc8; color: #d4e4f0; }
 
   /* ── STATUS BAR ── */
   .status-bar {
@@ -717,6 +740,72 @@
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
   .divider { width: 1px; height: 12px; background: #444; }
+
+  /* ── COLLAPSE TOGGLES ── */
+  .collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    line-height: 1;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .collapse-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Sidebar collapsed */
+  .sidebar {
+    transition: min-width 0.25s ease, width 0.25s ease, max-width 0.25s ease;
+  }
+  .sidebar.collapsed {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+  }
+  .sidebar.collapsed .sidebar-header h2,
+  .sidebar.collapsed .feed-tabs,
+  .sidebar.collapsed .article-list,
+  .sidebar.collapsed #article-count-label {
+    display: none;
+  }
+  .sidebar.collapsed .sidebar-header {
+    flex-direction: column;
+    padding: 8px 6px;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+  }
+  .sidebar-collapsed-label {
+    display: none;
+    writing-mode: vertical-rl;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .sidebar.collapsed .sidebar-collapsed-label { display: block; }
+
+  /* Summary panel collapsed */
+  .summary-panel {
+    transition: height 0.25s ease;
+  }
+  .summary-panel.collapsed {
+    height: 36px !important;
+  }
+  .summary-panel.collapsed .summary-body {
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -726,9 +815,9 @@
   <div class="masthead-title">The <span>Dispatch</span></div>
   <div class="masthead-meta" id="masthead-date"></div>
   <div class="masthead-actions">
-    <button class="btn" onclick="openModal('refresh-modal')" id="refresh-btn">⟳ Refresh</button>
-    <button class="btn" onclick="openModal('bookmarks-modal')">⚑ Saved</button>
-    <button class="btn" onclick="openModal('settings-modal')">⚙ Settings</button>
+    <button class="btn" onclick="openModal('refresh-modal')" id="refresh-btn">⟳ <span class="btn-label">Refresh</span></button>
+    <button class="btn" onclick="openModal('bookmarks-modal')">⚑ <span class="btn-label">Saved</span></button>
+    <button class="btn" onclick="openModal('settings-modal')">⚙ <span class="btn-label">Settings</span></button>
   </div>
 </header>
 
@@ -744,10 +833,14 @@
 <div class="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h2>Feeds</h2>
-      <span class="status-item" id="article-count-label">—</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="status-item" id="article-count-label">—</span>
+        <button class="collapse-btn" id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse feed list">◀</button>
+      </div>
+      <span class="sidebar-collapsed-label">Feeds</span>
     </div>
     <div class="feed-tabs" id="feed-tabs">
       <button class="feed-tab active" data-feed="all" onclick="filterFeed('all', this)">All</button>
@@ -770,7 +863,7 @@
     </div>
 
     <!-- AI SUMMARY PANEL -->
-    <div class="summary-panel">
+    <div class="summary-panel" id="summary-panel">
       <div class="summary-header">
         <h3>
           AI Summary <span class="ai-badge">CLAUDE</span>
@@ -778,6 +871,7 @@
         <div class="summary-actions">
           <button class="btn-ghost" id="summarize-btn" onclick="summarizeArticle()" style="display:none">▶ Summarize</button>
           <button class="btn-ghost" id="regen-btn" onclick="summarizeArticle(true)" style="display:none">↺ Regenerate</button>
+          <button class="collapse-btn" id="summary-toggle" onclick="toggleSummary()" title="Collapse summary panel" style="border-color:#4d6d88;color:#8fafc8">▾ Hide</button>
         </div>
       </div>
       <div class="summary-body" id="summary-body">
@@ -1551,9 +1645,48 @@ function escHtml(str) {
 }
 
 // ══════════════════════════════════════
+// COLLAPSE TOGGLES
+// ══════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  btn.textContent = isCollapsed ? '▶' : '◀';
+  btn.title = isCollapsed ? 'Expand feed list' : 'Collapse feed list';
+  localStorage.setItem('dispatch_sidebar_collapsed', isCollapsed);
+}
+
+function toggleSummary() {
+  const panel = document.getElementById('summary-panel');
+  const btn = document.getElementById('summary-toggle');
+  const isCollapsed = panel.classList.toggle('collapsed');
+  btn.textContent = isCollapsed ? '▴ Show' : '▾ Hide';
+  btn.title = isCollapsed ? 'Expand summary panel' : 'Collapse summary panel';
+  localStorage.setItem('dispatch_summary_collapsed', isCollapsed);
+}
+
+function restoreCollapseState() {
+  if (localStorage.getItem('dispatch_sidebar_collapsed') === 'true') {
+    const sidebar = document.getElementById('sidebar');
+    const btn = document.getElementById('sidebar-toggle');
+    sidebar.classList.add('collapsed');
+    btn.textContent = '▶';
+    btn.title = 'Expand feed list';
+  }
+  if (localStorage.getItem('dispatch_summary_collapsed') === 'true') {
+    const panel = document.getElementById('summary-panel');
+    const btn = document.getElementById('summary-toggle');
+    panel.classList.add('collapsed');
+    btn.textContent = '▴ Show';
+    btn.title = 'Expand summary panel';
+  }
+}
+
+// ══════════════════════════════════════
 // START
 // ══════════════════════════════════════
 init();
+restoreCollapseState();
 </script>
 </body>
 </html>
